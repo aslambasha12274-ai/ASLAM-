@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: trips
+    // Document ID: auto-generated
+    // Fields:
+    //   - vehicleNumber: string (required)
+    //   - from: string (required)
+    //   - to: string (required)
+    //   - driverName: string (optional)
+    //   - driverMobile: string (optional)
+    //   - tons: number (optional)
+    //   - driverAdvance: number (optional)
+    //   - dieselLiters: number (optional)
+    //   - dieselAmount: number (optional)
+    //   - rent: number (required)
+    //   - paymentMode: string (enum: Cash, UPI, Other)
+    //   - loadingCharge: number (optional)
+    //   - unloadingCharge: number (optional)
+    //   - localTax: number (optional)
+    //   - pcCharge: number (optional)
+    //   - otherExpense: number (optional)
+    //   - otherExpense1: number (optional)
+    //   - otherExpense2: number (optional)
+    //   - otherExpense3: number (optional)
+    //   - driverCharge: number (optional)
+    //   - createdAt: timestamp (required)
+    //   - uid: string (required)
+    //
+    // Collection: vehicles
+    // Document ID: auto-generated
+    // Fields:
+    //   - vehicleNumber: string (required)
+    //   - uid: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "aslambasha12274@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidTrip(data) {
+      return data.vehicleNumber is string && data.vehicleNumber.size() > 0 && data.vehicleNumber.size() < 20 &&
+             data.from is string && data.from.size() > 0 && data.from.size() < 100 &&
+             data.to is string && data.to.size() > 0 && data.to.size() < 100 &&
+             (!('driverName' in data) || (data.driverName is string && data.driverName.size() < 100)) &&
+             (!('driverMobile' in data) || (data.driverMobile is string && data.driverMobile.size() < 20)) &&
+             (!('tons' in data) || (data.tons is number && data.tons >= 0)) &&
+             (!('dieselAmount' in data) || (data.dieselAmount is number && data.dieselAmount >= 0)) &&
+             data.rent is number && data.rent >= 0 &&
+             (!('otherExpense' in data) || (data.otherExpense is number && data.otherExpense >= 0)) &&
+             (!('otherExpense1' in data) || (data.otherExpense1 is number && data.otherExpense1 >= 0)) &&
+             (!('otherExpense2' in data) || (data.otherExpense2 is number && data.otherExpense2 >= 0)) &&
+             (!('otherExpense3' in data) || (data.otherExpense3 is number && data.otherExpense3 >= 0)) &&
+             (!('driverCharge' in data) || (data.driverCharge is number && data.driverCharge >= 0)) &&
+             data.uid == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidVehicle(data) {
+      return data.vehicleNumber is string && data.vehicleNumber.size() > 0 && data.vehicleNumber.size() < 20 &&
+             data.uid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /trips/{tripId} {
+      allow read: if isAuthenticated() && (isDocOwner() || isAdmin());
+      allow create: if isAuthenticated() && isValidTrip(request.resource.data);
+      allow update: if isAuthenticated() && (isDocOwner() || isAdmin()) && isValidTrip(request.resource.data);
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated() && (isDocOwner() || isAdmin());
+      allow create: if isAuthenticated() && isValidVehicle(request.resource.data);
+      allow update: if isAuthenticated() && (isDocOwner() || isAdmin()) && isValidVehicle(request.resource.data);
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create, update: if isAuthenticated() && isOwner(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isAdmin());
+    }
+  }
+}

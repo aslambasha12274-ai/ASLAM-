@@ -1,0 +1,5 @@
+{
+  "name": "FleetLog: Truck Trip & Expense Manager",
+  "description": "A comprehensive fleet management tool to track trips, expenses, and profits for your 27 trucks across 18 key locations.",
+  "requestFramePermissions": []
+}

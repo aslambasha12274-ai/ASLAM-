@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "Trip": {
+      "title": "Trip",
+      "description": "A single trip record for a vehicle.",
+      "type": "object",
+      "properties": {
+        "vehicleNumber": { "type": "string", "description": "The registration number of the vehicle." },
+        "from": { "type": "string", "description": "Starting location." },
+        "to": { "type": "string", "description": "Destination location." },
+        "driverName": { "type": "string", "description": "Name of the driver for this trip." },
+        "driverMobile": { "type": "string", "description": "Mobile number of the driver." },
+        "tons": { "type": "number", "description": "Weight of the load in tons." },
+        "driverAdvance": { "type": "number", "description": "Advance paid to the driver." },
+        "dieselLiters": { "type": "number", "description": "Diesel consumed in liters." },
+        "dieselAmount": { "type": "number", "description": "Cost of diesel consumed." },
+        "rent": { "type": "number", "description": "Total rent amount." },
+        "paymentMode": { "type": "string", "enum": ["Cash", "UPI", "Other"], "description": "Mode of payment for rent." },
+        "loadingCharge": { "type": "number", "description": "Charge for loading." },
+        "unloadingCharge": { "type": "number", "description": "Charge for unloading." },
+        "localTax": { "type": "number", "description": "Local taxes paid." },
+        "pcCharge": { "type": "number", "description": "PC/Permit charges." },
+        "otherExpense": { "type": "number", "description": "Any other miscellaneous expenses." },
+        "otherExpense1": { "type": "number", "description": "Additional miscellaneous expense 1." },
+        "otherExpense2": { "type": "number", "description": "Additional miscellaneous expense 2." },
+        "otherExpense3": { "type": "number", "description": "Additional miscellaneous expense 3." },
+        "driverCharge": { "type": "number", "description": "Driver's commission or charge." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the record was created." },
+        "uid": { "type": "string", "description": "The user who created the record." }
+      },
+      "required": ["vehicleNumber", "from", "to", "rent", "uid", "createdAt"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "A vehicle in the fleet.",
+      "type": "object",
+      "properties": {
+        "vehicleNumber": { "type": "string", "description": "Unique vehicle registration number." },
+        "uid": { "type": "string", "description": "Owner of the vehicle record." }
+      },
+      "required": ["vehicleNumber", "uid"]
+    }
+  },
+  "firestore": {
+    "/trips/{tripId}": {
+      "schema": "Trip",
+      "description": "Collection of all truck trips."
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "Collection of vehicles in the fleet."
+    }
+  }
+}
